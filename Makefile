@@ -8,7 +8,7 @@ SRCDIR = src
 OBJDIR = obj
 
 # Source files
-SRC = main.c $(SRCDIR)/model.c
+SRC = main.c $(SRCDIR)/model.c $(SRCDIR)/parser.c
 OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SRC)))
 EXEC = EXEC
 
