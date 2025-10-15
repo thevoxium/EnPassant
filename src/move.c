@@ -1,4 +1,32 @@
 #include "move.h"
+#include "model.h"
+
+void generateKnightMoves(Board *b, Color colorToMove,
+                         PossibleMoves *possibleMoves, int rank, int file) {
+
+  int fromIndex = BOARD_INDEX(rank, file);
+  int direction[8][2] = {{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+                         {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
+  for (int i = 0; i < 8; i++) {
+    int r = rank + direction[i][0];
+    int f = file + direction[i][1];
+    if (r >= 0 && r < 8 && f >= 0 && f < 8) {
+      int toIndex = BOARD_INDEX(r, f);
+      Square target = b->grid[toIndex];
+      if (target.type == EMPTY || target.color != colorToMove) {
+        Move m = {
+            .fromSquare = fromIndex,
+            .toSquare = toIndex,
+            .pieceMoved = KNIGHT,
+            .pieceCaptured = target.type,
+            .piecePromoted = EMPTY,
+            .moveMade = (target.type == EMPTY) ? QUIET : CAPTURE,
+        };
+        possibleMoves->moves[possibleMoves->count++] = m;
+      }
+    }
+  }
+}
 
 void generateRookMoves(Board *b, Color colorToMove,
                        PossibleMoves *possibleMoves, int rank, int file) {
@@ -155,6 +183,8 @@ void generateAllMoves(Board *b, Color colorToMove,
       break;
     case ROOK:
       generateRookMoves(b, colorToMove, possibleMoves, rank, file);
+    case KNIGHT:
+      generateKnightMoves(b, colorToMove, possibleMoves, rank, file);
     default:
       break;
     }
