@@ -13,7 +13,7 @@ int main() {
   printBoard(board);
 
   PossibleMoves possibleMoves;
-  generateAllMoves(board, BLACK, &possibleMoves);
+  generateAllMoves(board, WHITE, &possibleMoves);
 
   for (int i = 0; i < possibleMoves.count; i++) {
     Move m = possibleMoves.moves[i];

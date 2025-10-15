@@ -1,5 +1,47 @@
 #include "move.h"
 
+void generateRookMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file) {
+
+  int fromIndex = BOARD_INDEX(rank, file);
+  int direction[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+  for (int i = 0; i < 4; i++) {
+    int r = rank + direction[i][0];
+    int f = file + direction[i][1];
+
+    while (r >= 0 && r < 8 && f >= 0 && f < 8) {
+      int toIndex = BOARD_INDEX(r, f);
+      Square target = b->grid[toIndex];
+
+      if (target.type == EMPTY) {
+        Move m = {
+            .fromSquare = fromIndex,
+            .toSquare = toIndex,
+            .pieceMoved = ROOK,
+            .pieceCaptured = EMPTY,
+            .moveMade = QUIET,
+        };
+        possibleMoves->moves[possibleMoves->count++] = m;
+      } else {
+        if (target.color != colorToMove) {
+          Move m = {
+              .fromSquare = fromIndex,
+              .toSquare = toIndex,
+              .pieceMoved = ROOK,
+              .pieceCaptured = target.type,
+              .moveMade = CAPTURE,
+          };
+          possibleMoves->moves[possibleMoves->count++] = m;
+        }
+        break; // stop scanning after hitting any piece
+      }
+      r += direction[i][0];
+      f += direction[i][1];
+    }
+  }
+}
+
 void generatePawnMoves(Board *b, Color colorToMove,
                        PossibleMoves *possibleMoves, int rank, int file) {
   int direction = (colorToMove == WHITE) ? -1 : 1;
@@ -111,6 +153,8 @@ void generateAllMoves(Board *b, Color colorToMove,
     case PAWN:
       generatePawnMoves(b, colorToMove, possibleMoves, rank, file);
       break;
+    case ROOK:
+      generateRookMoves(b, colorToMove, possibleMoves, rank, file);
     default:
       break;
     }

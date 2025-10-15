@@ -35,4 +35,6 @@ void generateAllMoves(Board *b, Color colorToMove,
 void generatePawnMoves(Board *b, Color colorToMove,
                        PossibleMoves *possibleMoves, int rank, int file);
 
+void generateRookMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file);
 #endif // !MOVE_H
