@@ -31,7 +31,9 @@ Board *initBoard(void) {
         b->grid[i].type = KING;
     }
   }
-
+  b->activeColor = WHITE;
+  b->halfMoveClock = 0;
+  b->fullMoveCount = 0;
   return b;
 }
 
@@ -73,11 +75,19 @@ char pieceChar(PieceType type, Color color) {
 }
 
 void printBoard(const Board *b) {
+  printf("   a b c d e f g h\n");
+  printf("  +----------------+\n");
   for (int i = 0; i < 8; ++i) {
+    printf("%d |", 8 - i);
     for (int j = 0; j < 8; ++j) {
       printf("%c ",
              pieceChar(b->grid[i * 8 + j].type, b->grid[i * 8 + j].color));
     }
-    printf("\n");
+    printf("| %d\n", 8 - i);
   }
+  printf("  +----------------+\n");
+  printf("   a b c d e f g h\n\n");
+  printf("Half Move Clock: %d\n", b->halfMoveClock);
+  printf("Full Move Count: %d\n", b->fullMoveCount);
+  printf("Active Color: %s\n", b->activeColor == WHITE ? "White" : "Black");
 }

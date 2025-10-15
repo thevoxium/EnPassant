@@ -1,14 +1,12 @@
 #include "parser.h"
 #include "model.h"
 #include "string.h"
-#define debug(x) printf("%s", x)
 
 void positionFromFen(char *position, Board *b) {
   char *s = position;
   int currentRank = 0;
   int currentFile = 0;
   while (*s != '\0') {
-    printf("%c", *s);
     if (*s == '/') {
       currentRank++;
       currentFile = 0;
@@ -79,7 +77,22 @@ void positionFromFen(char *position, Board *b) {
     }
     s++;
   }
-  printf("\n");
+}
+
+void castleParse(char *str, Board *b) {
+  char *s = str;
+  while (*s != '\0') {
+    if (*s == 'K') {
+      b->canWhiteCastleKingside = true;
+    } else if (*s == 'Q') {
+      b->canWhiteCastleQueenside = true;
+    } else if (*s == 'k') {
+      b->canBlackCastleKingside = true;
+    } else {
+      b->canBlackCastleQueenside = true;
+    }
+    s++;
+  }
 }
 
 Board *parseFen(const char *fen) {
@@ -106,6 +119,15 @@ Board *parseFen(const char *fen) {
   }
 
   positionFromFen(tokens[0], b);
+  if (strcmp(tokens[1], "w") == 0) {
+    b->activeColor = WHITE;
+  } else {
+    b->activeColor = BLACK;
+  }
+
+  b->halfMoveClock = atoi(tokens[4]);
+  b->fullMoveCount = atoi(tokens[5]);
+  castleParse(tokens[2], b);
 
   free(fenCopy);
   return b;

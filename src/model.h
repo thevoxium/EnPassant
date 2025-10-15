@@ -1,6 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -23,6 +24,13 @@ typedef struct {
 
 typedef struct Board {
   Square grid[64];
+  Color activeColor;
+  int halfMoveClock;
+  int fullMoveCount;
+  bool canWhiteCastleKingside;
+  bool canBlackCastleKingside;
+  bool canWhiteCastleQueenside;
+  bool canBlackCastleQueenside;
 } Board;
 
 Board *initBoard(void);
