@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#define BOARD_INDEX(rank, file) ((rank) * 8 + (file))
 
 typedef enum PieceType {
   EMPTY,

@@ -1,16 +1,27 @@
+
 #include "src/model.h"
+#include "src/move.h"
 #include "src/parser.h"
 
 int main() {
-  const char *fen =
-      "r3r1k1/pp1n1ppp/3bp3/3p4/3P1B2/2N1P3/PP3PPP/R2Q1RK1 w - - 0 21";
+  const char *fen = "4q2k/2r1r3/4PR1p/p1p5/P1Bp1Q1P/1P6/6P1/6K1 b - - 4 41";
 
   Board *board = parseFen(fen);
-  if (board == NULL) {
+  if (board == NULL)
     return 1;
-  }
 
   printBoard(board);
+
+  PossibleMoves possibleMoves;
+  generateAllMoves(board, BLACK, &possibleMoves);
+
+  for (int i = 0; i < possibleMoves.count; i++) {
+    Move m = possibleMoves.moves[i];
+    printf("%d -> %d | moved: %d | captured: %d | promoted: %d | type: %d\n",
+           m.fromSquare, m.toSquare, m.pieceMoved, m.pieceCaptured,
+           m.piecePromoted, m.moveMade);
+  }
+
   freeBoard(board);
   return 0;
 }

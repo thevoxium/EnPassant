@@ -1,0 +1,118 @@
+#include "move.h"
+
+void generatePawnMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file) {
+  int direction = (colorToMove == WHITE) ? -1 : 1;
+  int startRank = (colorToMove == WHITE) ? 6 : 1;
+  int promotionRank = (colorToMove == WHITE) ? 0 : 7;
+
+  int fromIndex = BOARD_INDEX(rank, file);
+
+  int oneAheadRank = rank + direction;
+  if (oneAheadRank >= 0 && oneAheadRank < 8) {
+    int oneAheadIndex = BOARD_INDEX(oneAheadRank, file);
+    if (b->grid[oneAheadIndex].type == EMPTY) {
+      Move m = {
+          .fromSquare = fromIndex,
+          .toSquare = oneAheadIndex,
+          .pieceMoved = PAWN,
+          .pieceCaptured = EMPTY,
+          .moveMade = QUIET,
+      };
+
+      if (oneAheadRank == promotionRank) {
+        m.moveMade = PROMOTION_QUEEN;
+        m.piecePromoted = QUEEN;
+        possibleMoves->moves[possibleMoves->count++] = m;
+
+        m.moveMade = PROMOTION_ROOK;
+        m.piecePromoted = ROOK;
+        possibleMoves->moves[possibleMoves->count++] = m;
+
+        m.moveMade = PROMOTION_BISHOP;
+        m.piecePromoted = BISHOP;
+        possibleMoves->moves[possibleMoves->count++] = m;
+
+        m.moveMade = PROMOTION_KNIGHT;
+        m.piecePromoted = KNIGHT;
+        possibleMoves->moves[possibleMoves->count++] = m;
+      } else {
+        possibleMoves->moves[possibleMoves->count++] = m;
+      }
+
+      if (rank == startRank) {
+        int twoAheadRank = rank + 2 * direction;
+        int twoAheadIndex = BOARD_INDEX(twoAheadRank, file);
+        if (b->grid[twoAheadIndex].type == EMPTY) {
+          Move dm = {.fromSquare = fromIndex,
+                     .toSquare = twoAheadIndex,
+                     .pieceMoved = PAWN,
+                     .pieceCaptured = EMPTY,
+                     .moveMade = DOUBLE_PAWN_PUSH};
+          possibleMoves->moves[possibleMoves->count++] = dm;
+        }
+      }
+    }
+  }
+
+  int captureFiles[2] = {file - 1, file + 1};
+  for (int i = 0; i < 2; i++) {
+    int cf = captureFiles[i];
+    if (cf < 0 || cf > 7)
+      continue; // off board
+    int captureRank = rank + direction;
+    if (captureRank < 0 || captureRank > 7)
+      continue;
+
+    int targetIndex = BOARD_INDEX(captureRank, cf);
+    Square target = b->grid[targetIndex];
+
+    if (target.type != EMPTY && target.color != colorToMove) {
+      Move m = {.fromSquare = fromIndex,
+                .toSquare = targetIndex,
+                .pieceMoved = PAWN,
+                .pieceCaptured = target.type,
+                .moveMade = CAPTURE};
+
+      if (captureRank == promotionRank) {
+        m.moveMade = PROMOTION_QUEEN;
+        m.piecePromoted = QUEEN;
+        possibleMoves->moves[possibleMoves->count++] = m;
+
+        m.moveMade = PROMOTION_ROOK;
+        m.piecePromoted = ROOK;
+        possibleMoves->moves[possibleMoves->count++] = m;
+
+        m.moveMade = PROMOTION_BISHOP;
+        m.piecePromoted = BISHOP;
+        possibleMoves->moves[possibleMoves->count++] = m;
+
+        m.moveMade = PROMOTION_KNIGHT;
+        m.piecePromoted = KNIGHT;
+        possibleMoves->moves[possibleMoves->count++] = m;
+      } else {
+        possibleMoves->moves[possibleMoves->count++] = m;
+      }
+    }
+  }
+}
+
+void generateAllMoves(Board *b, Color colorToMove,
+                      PossibleMoves *possibleMoves) {
+  possibleMoves->count = 0;
+  for (int i = 0; i < 64; i++) {
+    Square s = b->grid[i];
+    if (s.color != colorToMove)
+      continue;
+    int rank = i / 8;
+    int file = i % 8;
+
+    switch (s.type) {
+    case PAWN:
+      generatePawnMoves(b, colorToMove, possibleMoves, rank, file);
+      break;
+    default:
+      break;
+    }
+  }
+}
