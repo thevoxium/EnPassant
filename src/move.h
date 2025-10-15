@@ -35,6 +35,12 @@ void generatePawnMoves(Board *b, Color colorToMove,
                        PossibleMoves *possibleMoves, int rank, int file);
 void generateRookMoves(Board *b, Color colorToMove,
                        PossibleMoves *possibleMoves, int rank, int file);
+void generateKingMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file);
+void generateQueenMoves(Board *b, Color colorToMove,
+                        PossibleMoves *possibleMoves, int rank, int file);
+void generateBishopMoves(Board *b, Color colorToMove,
+                         PossibleMoves *possibleMoves, int rank, int file);
 void generateKnightMoves(Board *b, Color colorToMove,
                          PossibleMoves *possibleMoves, int rank, int file);
 #endif // !MOVE_H
