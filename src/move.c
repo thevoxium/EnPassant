@@ -2,6 +2,24 @@
 #include "model.h"
 #include <stddef.h>
 
+bool isInCheck(Board *b, Color colorToMove) {
+  int kingIndex = 0;
+  for (int i = 0; i < 64; i++) {
+    if (b->grid[i].type == KING && b->grid[i].color == colorToMove) {
+      kingIndex = i;
+    }
+  }
+  Color colorToCheck = (colorToMove == WHITE) ? BLACK : WHITE;
+  PossibleMoves possibleMoves;
+  generateAllMoves(b, colorToCheck, &possibleMoves);
+  for (int i = 0; i < possibleMoves.count; i++) {
+    if (possibleMoves.moves[i].toSquare == kingIndex) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void generateKnightMoves(Board *b, Color colorToMove,
                          PossibleMoves *possibleMoves, int rank, int file) {
 

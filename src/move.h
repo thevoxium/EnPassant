@@ -43,4 +43,7 @@ void generateBishopMoves(Board *b, Color colorToMove,
                          PossibleMoves *possibleMoves, int rank, int file);
 void generateKnightMoves(Board *b, Color colorToMove,
                          PossibleMoves *possibleMoves, int rank, int file);
+
+bool isInCheck(Board *b, Color colorToMove);
+
 #endif // !MOVE_H

@@ -1,2 +1,4 @@
 obj/
+.clangd
+.DS_Store
 assets/
