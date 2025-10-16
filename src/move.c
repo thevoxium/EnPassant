@@ -1,6 +1,7 @@
 #include "move.h"
 #include "model.h"
 #include <stddef.h>
+#include <stdio.h>
 
 bool isInCheck(Board *b, Color colorToMove) {
   int kingIndex = 0;
@@ -32,6 +33,16 @@ void undoMove(Board *b, Move *m) {
   b->grid[m->fromSquare].type = b->grid[m->toSquare].type;
   b->grid[m->toSquare].color = NONE;
   b->grid[m->toSquare].type = EMPTY;
+}
+
+bool isMoveLegal(Board *b, Move *m, Color colorToMove) {
+  bool legal;
+
+  doMove(b, m);
+  legal = !isInCheck(b, colorToMove);
+  undoMove(b, m);
+
+  return legal;
 }
 
 void generateKnightMoves(Board *b, Color colorToMove,
