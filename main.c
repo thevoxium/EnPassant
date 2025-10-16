@@ -29,7 +29,8 @@ int main() {
   // }
   doMove(board, &possibleMoves.moves[0]);
   printBoard(board);
-
+  undoMove(board, &possibleMoves.moves[0]);
+  printBoard(board);
   bool check = isInCheck(board, WHITE);
   printf("%d\n", check);
 

@@ -46,5 +46,5 @@ void generateKnightMoves(Board *b, Color colorToMove,
 
 bool isInCheck(Board *b, Color colorToMove);
 void doMove(Board *b, Move *m);
-
+void undoMove(Board *b, Move *m);
 #endif // !MOVE_H

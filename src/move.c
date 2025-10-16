@@ -27,6 +27,13 @@ void doMove(Board *b, Move *m) {
   b->grid[m->fromSquare].type = EMPTY;
 }
 
+void undoMove(Board *b, Move *m) {
+  b->grid[m->fromSquare].color = b->grid[m->toSquare].color;
+  b->grid[m->fromSquare].type = b->grid[m->toSquare].type;
+  b->grid[m->toSquare].color = NONE;
+  b->grid[m->toSquare].type = EMPTY;
+}
+
 void generateKnightMoves(Board *b, Color colorToMove,
                          PossibleMoves *possibleMoves, int rank, int file) {
 
