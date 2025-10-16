@@ -1,4 +1,5 @@
 obj/
+all.txt
 .clangd
 .DS_Store
 assets/

@@ -20,6 +20,7 @@ typedef struct Move {
   int toSquare;
   PieceType pieceMoved;
   PieceType pieceCaptured;
+  Color pieceCapturedColor;
   PieceType piecePromoted;
   MoveType moveMade;
 } Move;

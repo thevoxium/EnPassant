@@ -1,5 +1,6 @@
 #include "search.h"
 #include "model.h"
+#include "move.h"
 
 int evaluatePosition(Board *b) {
   int score = 0;
@@ -30,4 +31,42 @@ int evaluatePosition(Board *b) {
     score += ((b->grid[i].color == WHITE) ? 1 : -1) * squareScore;
   }
   return score;
+}
+
+BestMove miniMaxSearch(Board *b, int depth, bool isMaxPlayer,
+                       Color colorToMove) {
+  if (depth == 0) {
+    BestMove bestMove;
+    bestMove.bestScore = evaluatePosition(b);
+    return bestMove;
+  }
+
+  BestMove bestMove;
+  bestMove.bestScore = isMaxPlayer ? -99999 : 99999;
+
+  PossibleMoves possibleMoves;
+  generateAllMoves(b, colorToMove, &possibleMoves);
+
+  for (int i = 0; i < possibleMoves.count; i++) {
+    Move move = possibleMoves.moves[i];
+
+    doMove(b, &move);
+    BestMove child = miniMaxSearch(b, depth - 1, !isMaxPlayer,
+                                   colorToMove == WHITE ? BLACK : WHITE);
+    undoMove(b, &move);
+
+    if (isMaxPlayer) {
+      if (child.bestScore > bestMove.bestScore) {
+        bestMove.bestScore = child.bestScore;
+        bestMove.bestMove = move;
+      }
+    } else {
+      if (child.bestScore < bestMove.bestScore) {
+        bestMove.bestScore = child.bestScore;
+        bestMove.bestMove = move;
+      }
+    }
+  }
+
+  return bestMove;
 }

@@ -1,3 +1,212 @@
+#ifndef MODEL_H
+#define MODEL_H
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define BOARD_INDEX(rank, file) ((rank) * 8 + (file))
+
+typedef enum PieceType {
+  EMPTY,
+  PAWN,
+  KNIGHT,
+  BISHOP,
+  ROOK,
+  QUEEN,
+  KING
+} PieceType;
+
+typedef enum Color { NONE, WHITE, BLACK } Color;
+
+typedef struct {
+  PieceType type;
+  Color color;
+} Square;
+
+typedef struct Board {
+  Square grid[64];
+  Color activeColor;
+  int halfMoveClock;
+  int fullMoveCount;
+  bool canWhiteCastleKingside;
+  bool canBlackCastleKingside;
+  bool canWhiteCastleQueenside;
+  bool canBlackCastleQueenside;
+} Board;
+
+Board *initBoard(void);
+void freeBoard(Board *b);
+void printBoard(const Board *b);
+
+#endif
+#ifndef MOVE_H
+#define MOVE_H
+#include "model.h"
+
+typedef enum MoveType {
+  QUIET,
+  CAPTURE,
+  DOUBLE_PAWN_PUSH,
+  KING_CASTLE,
+  QUEEN_CASTLE,
+  EN_PASSANT,
+  PROMOTION_QUEEN,
+  PROMOTION_ROOK,
+  PROMOTION_BISHOP,
+  PROMOTION_KNIGHT
+} MoveType;
+
+typedef struct Move {
+  int fromSquare;
+  int toSquare;
+  PieceType pieceMoved;
+  PieceType pieceCaptured;
+  PieceType piecePromoted;
+  MoveType moveMade;
+} Move;
+
+typedef struct PossibleMoves {
+  Move moves[256];
+  int count;
+} PossibleMoves;
+
+void generateAllMoves(Board *b, Color colorToMove,
+                      PossibleMoves *possibleMoves);
+void generatePawnMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file);
+void generateRookMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file);
+void generateKingMoves(Board *b, Color colorToMove,
+                       PossibleMoves *possibleMoves, int rank, int file);
+void generateQueenMoves(Board *b, Color colorToMove,
+                        PossibleMoves *possibleMoves, int rank, int file);
+void generateBishopMoves(Board *b, Color colorToMove,
+                         PossibleMoves *possibleMoves, int rank, int file);
+void generateKnightMoves(Board *b, Color colorToMove,
+                         PossibleMoves *possibleMoves, int rank, int file);
+
+bool isInCheck(Board *b, Color colorToMove);
+void doMove(Board *b, Move *m);
+void undoMove(Board *b, Move *m);
+bool isMoveLegal(Board *b, Move *m, Color colorToMove);
+#endif // !MOVE_H
+#ifndef PARSER_H
+#define PARSER_H
+
+#include "model.h"
+
+Board *parseFen(const char *fen);
+void positionFromFen(char *position, Board *b);
+
+#endif // !PARSER_H
+#ifndef SEARCH_H
+#define SEARCH_H
+
+#include "move.h"
+
+typedef struct BestMove {
+  Move bestMove;
+  int bestScore;
+} BestMove;
+
+int evaluatePosition(Board *b);
+BestMove miniMaxSearch(Board *b, int depth, bool isMaxPlayer,
+                       Color colorToMove);
+
+#endif // !SEARCH_H
+#include "model.h"
+
+Board *initBoard(void) {
+  Board *b = (Board *)malloc(sizeof(Board));
+  if (!b) {
+    return NULL;
+  }
+
+  for (int i = 0; i < 64; ++i) {
+    int row = i / 8;
+    b->grid[i].type = EMPTY;
+    b->grid[i].color = NONE;
+    if (row == 1) {
+      b->grid[i].type = PAWN;
+      b->grid[i].color = BLACK;
+    } else if (row == 6) {
+      b->grid[i].type = PAWN;
+      b->grid[i].color = WHITE;
+    } else if (row == 0 || row == 7) {
+      b->grid[i].color = (row == 0) ? BLACK : WHITE;
+      int col = i % 8;
+      if (col == 0 || col == 7)
+        b->grid[i].type = ROOK;
+      else if (col == 1 || col == 6)
+        b->grid[i].type = KNIGHT;
+      else if (col == 2 || col == 5)
+        b->grid[i].type = BISHOP;
+      else if (col == 3)
+        b->grid[i].type = QUEEN;
+      else if (col == 4)
+        b->grid[i].type = KING;
+    }
+  }
+  b->activeColor = WHITE;
+  b->halfMoveClock = 0;
+  b->fullMoveCount = 0;
+  return b;
+}
+
+void freeBoard(Board *b) {
+  if (b == NULL) {
+    return;
+  }
+  free(b);
+}
+
+char pieceChar(PieceType type, Color color) {
+  if (type == EMPTY)
+    return '.';
+  char c;
+  switch (type) {
+  case PAWN:
+    c = 'P';
+    break;
+  case KNIGHT:
+    c = 'N';
+    break;
+  case BISHOP:
+    c = 'B';
+    break;
+  case ROOK:
+    c = 'R';
+    break;
+  case QUEEN:
+    c = 'Q';
+    break;
+  case KING:
+    c = 'K';
+    break;
+  default:
+    c = '?';
+    break;
+  }
+  return (color == WHITE) ? c : c + 32; // lowercase for black
+}
+
+void printBoard(const Board *b) {
+  printf("   a b c d e f g h\n");
+  printf("  +----------------+\n");
+  for (int i = 0; i < 8; ++i) {
+    printf("%d |", 8 - i);
+    for (int j = 0; j < 8; ++j) {
+      printf("%c ",
+             pieceChar(b->grid[i * 8 + j].type, b->grid[i * 8 + j].color));
+    }
+    printf("| %d\n", 8 - i);
+  }
+  printf("  +----------------+\n");
+  printf("   a b c d e f g h\n\n");
+  printf("Half Move Clock: %d\n", b->halfMoveClock);
+  printf("Full Move Count: %d\n", b->fullMoveCount);
+  printf("Active Color: %s\n", b->activeColor == WHITE ? "White" : "Black");
+}
 #include "move.h"
 #include "model.h"
 #include <stddef.h>
@@ -31,8 +240,8 @@ void doMove(Board *b, Move *m) {
 void undoMove(Board *b, Move *m) {
   b->grid[m->fromSquare].color = b->grid[m->toSquare].color;
   b->grid[m->fromSquare].type = b->grid[m->toSquare].type;
-  b->grid[m->toSquare].color = m->pieceCapturedColor;
-  b->grid[m->toSquare].type = m->pieceCaptured;
+  b->grid[m->toSquare].color = NONE;
+  b->grid[m->toSquare].type = EMPTY;
 }
 
 bool isMoveLegal(Board *b, Move *m, Color colorToMove) {
@@ -64,7 +273,6 @@ void generateKnightMoves(Board *b, Color colorToMove,
             .pieceMoved = KNIGHT,
             .pieceCaptured = target.type,
             .piecePromoted = EMPTY,
-            .pieceCapturedColor = target.color,
             .moveMade = (target.type == EMPTY) ? QUIET : CAPTURE,
         };
         possibleMoves->moves[possibleMoves->count++] = m;
@@ -92,7 +300,6 @@ void generateBishopMoves(Board *b, Color colorToMove,
             .fromSquare = fromIndex,
             .toSquare = toIndex,
             .pieceMoved = BISHOP,
-            .pieceCapturedColor = target.color,
             .pieceCaptured = EMPTY,
             .moveMade = QUIET,
         };
@@ -103,7 +310,6 @@ void generateBishopMoves(Board *b, Color colorToMove,
               .fromSquare = fromIndex,
               .toSquare = toIndex,
               .pieceMoved = BISHOP,
-              .pieceCapturedColor = target.color,
               .pieceCaptured = target.type,
               .moveMade = CAPTURE,
           };
@@ -135,7 +341,6 @@ void generateRookMoves(Board *b, Color colorToMove,
         Move m = {
             .fromSquare = fromIndex,
             .toSquare = toIndex,
-            .pieceCapturedColor = target.color,
             .pieceMoved = ROOK,
             .pieceCaptured = EMPTY,
             .moveMade = QUIET,
@@ -146,7 +351,6 @@ void generateRookMoves(Board *b, Color colorToMove,
           Move m = {
               .fromSquare = fromIndex,
               .toSquare = toIndex,
-              .pieceCapturedColor = target.color,
               .pieceMoved = ROOK,
               .pieceCaptured = target.type,
               .moveMade = CAPTURE,
@@ -179,7 +383,6 @@ void generateQueenMoves(Board *b, Color colorToMove,
         Move m = {.fromSquare = fromIndex,
                   .toSquare = toIndex,
                   .pieceMoved = QUEEN,
-                  .pieceCapturedColor = target.color,
                   .pieceCaptured = EMPTY,
                   .moveMade = QUIET};
         possibleMoves->moves[possibleMoves->count++] = m;
@@ -188,7 +391,6 @@ void generateQueenMoves(Board *b, Color colorToMove,
           Move m = {.fromSquare = fromIndex,
                     .toSquare = toIndex,
                     .pieceMoved = QUEEN,
-                    .pieceCapturedColor = target.color,
                     .pieceCaptured = target.type,
                     .moveMade = CAPTURE};
           possibleMoves->moves[possibleMoves->count++] = m;
@@ -217,7 +419,6 @@ void generatePawnMoves(Board *b, Color colorToMove,
       Move m = {
           .fromSquare = fromIndex,
           .toSquare = oneAheadIndex,
-          .pieceCapturedColor = b->grid[oneAheadIndex].color,
           .pieceMoved = PAWN,
           .pieceCaptured = EMPTY,
           .moveMade = QUIET,
@@ -249,7 +450,6 @@ void generatePawnMoves(Board *b, Color colorToMove,
         if (b->grid[twoAheadIndex].type == EMPTY) {
           Move dm = {.fromSquare = fromIndex,
                      .toSquare = twoAheadIndex,
-                     .pieceCapturedColor = b->grid[twoAheadIndex].color,
                      .pieceMoved = PAWN,
                      .pieceCaptured = EMPTY,
                      .moveMade = DOUBLE_PAWN_PUSH};
@@ -275,7 +475,6 @@ void generatePawnMoves(Board *b, Color colorToMove,
       Move m = {.fromSquare = fromIndex,
                 .toSquare = targetIndex,
                 .pieceMoved = PAWN,
-                .pieceCapturedColor = target.color,
                 .pieceCaptured = target.type,
                 .moveMade = CAPTURE};
 
@@ -319,7 +518,6 @@ void generateKingMoves(Board *b, Color colorToMove,
       if (target.type == EMPTY || target.color != colorToMove) {
         Move m = {.fromSquare = fromIndex,
                   .toSquare = toIndex,
-                  .pieceCapturedColor = target.color,
                   .pieceMoved = KING,
                   .pieceCaptured = target.type,
                   .moveMade = (target.type == EMPTY) ? QUIET : CAPTURE};
@@ -362,4 +560,210 @@ void generateAllMoves(Board *b, Color colorToMove,
       break;
     }
   }
+}
+#include "parser.h"
+#include "model.h"
+#include "string.h"
+
+void positionFromFen(char *position, Board *b) {
+  char *s = position;
+  int currentRank = 0;
+  int currentFile = 0;
+  while (*s != '\0') {
+    if (*s == '/') {
+      currentRank++;
+      currentFile = 0;
+    } else if (*s >= 48 && *s <= 57) {
+      int skip = *s - 48;
+      for (int i = 0; i < skip; i++) {
+        b->grid[currentRank * 8 + currentFile].type = EMPTY;
+        b->grid[currentRank * 8 + currentFile].color = NONE;
+        currentFile++;
+      }
+    } else if ((*s >= 97 && *s <= 122) || (*s >= 65 && *s <= 90)) {
+      char c = *s;
+      switch (c) {
+      case 'r':
+        b->grid[currentRank * 8 + currentFile].type = ROOK;
+        b->grid[currentRank * 8 + currentFile].color = BLACK;
+        break;
+      case 'n':
+        b->grid[currentRank * 8 + currentFile].type = KNIGHT;
+        b->grid[currentRank * 8 + currentFile].color = BLACK;
+        break;
+      case 'b':
+        b->grid[currentRank * 8 + currentFile].type = BISHOP;
+        b->grid[currentRank * 8 + currentFile].color = BLACK;
+        break;
+      case 'q':
+        b->grid[currentRank * 8 + currentFile].type = QUEEN;
+        b->grid[currentRank * 8 + currentFile].color = BLACK;
+        break;
+      case 'k':
+        b->grid[currentRank * 8 + currentFile].type = KING;
+        b->grid[currentRank * 8 + currentFile].color = BLACK;
+        break;
+      case 'p':
+        b->grid[currentRank * 8 + currentFile].type = PAWN;
+        b->grid[currentRank * 8 + currentFile].color = BLACK;
+        break;
+      case 'R':
+        b->grid[currentRank * 8 + currentFile].type = ROOK;
+        b->grid[currentRank * 8 + currentFile].color = WHITE;
+        break;
+      case 'N':
+        b->grid[currentRank * 8 + currentFile].type = KNIGHT;
+        b->grid[currentRank * 8 + currentFile].color = WHITE;
+        break;
+      case 'B':
+        b->grid[currentRank * 8 + currentFile].type = BISHOP;
+        b->grid[currentRank * 8 + currentFile].color = WHITE;
+        break;
+      case 'Q':
+        b->grid[currentRank * 8 + currentFile].type = QUEEN;
+        b->grid[currentRank * 8 + currentFile].color = WHITE;
+        break;
+      case 'K':
+        b->grid[currentRank * 8 + currentFile].type = KING;
+        b->grid[currentRank * 8 + currentFile].color = WHITE;
+        break;
+      case 'P':
+        b->grid[currentRank * 8 + currentFile].type = PAWN;
+        b->grid[currentRank * 8 + currentFile].color = WHITE;
+        break;
+      default:
+        b->grid[currentRank * 8 + currentFile].type = EMPTY;
+        b->grid[currentRank * 8 + currentFile].color = NONE;
+        break;
+      }
+      currentFile++;
+    }
+    s++;
+  }
+}
+
+void castleParse(char *str, Board *b) {
+  char *s = str;
+  while (*s != '\0') {
+    if (*s == 'K') {
+      b->canWhiteCastleKingside = true;
+    } else if (*s == 'Q') {
+      b->canWhiteCastleQueenside = true;
+    } else if (*s == 'k') {
+      b->canBlackCastleKingside = true;
+    } else {
+      b->canBlackCastleQueenside = true;
+    }
+    s++;
+  }
+}
+
+Board *parseFen(const char *fen) {
+  char *fenCopy = strdup(fen);
+  if (fenCopy == NULL) {
+    return NULL;
+  }
+
+  char *tokens[6];
+  int i = 0;
+  char *token = strtok(fenCopy, " ");
+  while (i < 6 && token != NULL) {
+    tokens[i++] = token;
+    token = strtok(NULL, " ");
+  }
+  for (int j = 0; j < i; j++) {
+    printf("Token %d: %s\n", j + 1, tokens[j]);
+  }
+
+  Board *b = (Board *)malloc(sizeof(Board));
+  if (b == NULL) {
+    free(fenCopy);
+    return NULL;
+  }
+
+  positionFromFen(tokens[0], b);
+  if (strcmp(tokens[1], "w") == 0) {
+    b->activeColor = WHITE;
+  } else {
+    b->activeColor = BLACK;
+  }
+
+  b->halfMoveClock = atoi(tokens[4]);
+  b->fullMoveCount = atoi(tokens[5]);
+  castleParse(tokens[2], b);
+
+  free(fenCopy);
+  return b;
+}
+#include "search.h"
+#include "model.h"
+#include "move.h"
+
+int evaluatePosition(Board *b) {
+  int score = 0;
+  for (int i = 0; i < 64; i++) {
+    int squareScore = 0;
+    switch (b->grid[i].type) {
+    case PAWN:
+      squareScore = 100;
+      break;
+    case ROOK:
+      squareScore = 500;
+      break;
+    case BISHOP:
+      squareScore = 350;
+      break;
+    case KNIGHT:
+      squareScore = 300;
+      break;
+    case QUEEN:
+      squareScore = 900;
+      break;
+    case KING:
+      squareScore = 1500;
+      break;
+    default:
+      break;
+    }
+    score += ((b->grid[i].color == WHITE) ? 1 : -1) * squareScore;
+  }
+  return score;
+}
+
+BestMove miniMaxSearch(Board *b, int depth, bool isMaxPlayer,
+                       Color colorToMove) {
+  if (depth == 0) {
+    BestMove bestMove;
+    bestMove.bestScore = evaluatePosition(b);
+    return bestMove;
+  }
+
+  BestMove bestMove;
+  bestMove.bestScore = isMaxPlayer ? -99999 : 99999;
+
+  PossibleMoves possibleMoves;
+  generateAllMoves(b, colorToMove, &possibleMoves);
+
+  for (int i = 0; i < possibleMoves.count; i++) {
+    Move move = possibleMoves.moves[i];
+
+    doMove(b, &move);
+    BestMove child = miniMaxSearch(b, depth - 1, !isMaxPlayer,
+                                   colorToMove == WHITE ? BLACK : WHITE);
+    undoMove(b, &move);
+
+    if (isMaxPlayer) {
+      if (child.bestScore > bestMove.bestScore) {
+        bestMove.bestScore = child.bestScore;
+        bestMove.bestMove = move;
+      }
+    } else {
+      if (child.bestScore < bestMove.bestScore) {
+        bestMove.bestScore = child.bestScore;
+        bestMove.bestMove = move;
+      }
+    }
+  }
+
+  return bestMove;
 }
