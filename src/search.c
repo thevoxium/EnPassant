@@ -222,3 +222,65 @@ BestMove miniMaxSearch(Board *b, int depth, bool isMaxPlayer,
 
   return bestMove;
 }
+
+BestMove alphaBetaSearch(Board *b, int depth, bool isMaxPlayer,
+                         Color colorToMove, int alpha, int beta) {
+  BestMove bestMove;
+
+  // Base case: evaluate position
+  if (depth == 0) {
+    bestMove.bestScore = evaluatePosition(b);
+    return bestMove;
+  }
+
+  PossibleMoves possibleMoves;
+  generateAllMoves(b, colorToMove, &possibleMoves);
+
+  if (isMaxPlayer) {
+    bestMove.bestScore = -99999;
+    for (int i = 0; i < possibleMoves.count; i++) {
+      Move move = possibleMoves.moves[i];
+      doMove(b, &move);
+
+      BestMove child =
+          alphaBetaSearch(b, depth - 1, false,
+                          colorToMove == WHITE ? BLACK : WHITE, alpha, beta);
+
+      undoMove(b, &move);
+
+      if (child.bestScore > bestMove.bestScore) {
+        bestMove.bestScore = child.bestScore;
+        bestMove.bestMove = move;
+      }
+
+      alpha = (alpha > bestMove.bestScore) ? alpha : bestMove.bestScore;
+      if (beta <= alpha) {
+        break; // Beta cutoff
+      }
+    }
+  } else {
+    bestMove.bestScore = 99999;
+    for (int i = 0; i < possibleMoves.count; i++) {
+      Move move = possibleMoves.moves[i];
+      doMove(b, &move);
+
+      BestMove child =
+          alphaBetaSearch(b, depth - 1, true,
+                          colorToMove == WHITE ? BLACK : WHITE, alpha, beta);
+
+      undoMove(b, &move);
+
+      if (child.bestScore < bestMove.bestScore) {
+        bestMove.bestScore = child.bestScore;
+        bestMove.bestMove = move;
+      }
+
+      beta = (beta < bestMove.bestScore) ? beta : bestMove.bestScore;
+      if (beta <= alpha) {
+        break; // Alpha cutoff
+      }
+    }
+  }
+
+  return bestMove;
+}

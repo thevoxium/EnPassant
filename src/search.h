@@ -23,5 +23,6 @@ int countLegalMoves(Board *b, Color color);
 
 BestMove miniMaxSearch(Board *b, int depth, bool isMaxPlayer,
                        Color colorToMove);
-
+BestMove alphaBetaSearch(Board *b, int depth, bool isMaxPlayer,
+                         Color colorToMove, int alpha, int beta);
 #endif
