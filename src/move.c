@@ -20,6 +20,13 @@ bool isInCheck(Board *b, Color colorToMove) {
   return false;
 }
 
+void doMove(Board *b, Move *m) {
+  b->grid[m->toSquare].color = b->grid[m->fromSquare].color;
+  b->grid[m->toSquare].type = b->grid[m->fromSquare].type;
+  b->grid[m->fromSquare].color = NONE;
+  b->grid[m->fromSquare].type = EMPTY;
+}
+
 void generateKnightMoves(Board *b, Color colorToMove,
                          PossibleMoves *possibleMoves, int rank, int file) {
 
