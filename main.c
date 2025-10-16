@@ -18,10 +18,13 @@ int main() {
 
   Color current = WHITE;
   int depth = 4;
-  for (int turn = 0; turn < 10; turn++) {
+  for (int turn = 0; turn < 200; turn++) {
     // BestMove best = miniMaxSearch(board, 4, current == WHITE, current);
-    BestMove best =
-        alphaBetaSearch(board, depth, current == WHITE, current, -99999, 99999);
+    BestMove best = alphaBetaOrderedSearch(board, depth, current == WHITE,
+                                           current, -99999, 99999);
+    // BestMove best =
+    //     alphaBetaSearch(board, depth, current == WHITE, current, -99999,
+    //     99999);
     printf("Turn %d | %s to move\n", turn + 1,
            current == WHITE ? "White" : "Black");
     printf("Best score: %d\n", best.bestScore);
