@@ -129,7 +129,7 @@ int evaluatePosition(Board *b) {
       continue;
 
     int type_idx = sq.type - 1;
-    int pst_idx = (sq.color == WHITE) ? (i ^ 56) : i;
+    int pst_idx = (sq.color == WHITE) ? i : (i ^ 56);
 
     int mg_val = mg_piece_value[type_idx] + mg_psts[type_idx][pst_idx];
     int eg_val = eg_piece_value[type_idx] + eg_psts[type_idx][pst_idx];
