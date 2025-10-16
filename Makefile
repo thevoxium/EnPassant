@@ -1,14 +1,14 @@
-
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -I./src
+CFLAGS = -Wall -Wextra -O2 -I./src -I/opt/homebrew/include
+LDFLAGS = -L/opt/homebrew/lib -lSDL2 -lSDL2_image -lSDL2_ttf
 
 # Directories
 SRCDIR = src
 OBJDIR = obj
 
 # Source files
-SRC = main.c $(SRCDIR)/model.c $(SRCDIR)/parser.c $(SRCDIR)/search.c $(SRCDIR)/move.c 
+SRC = main.c $(SRCDIR)/model.c $(SRCDIR)/parser.c $(SRCDIR)/search.c $(SRCDIR)/move.c #$(SRCDIR)/graphics.c
 OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(notdir $(SRC)))
 EXEC = EXEC
 
@@ -26,16 +26,19 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 $(OBJDIR)/main.o: main.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Build executable
+build: $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(EXEC)
+
 # Build and run executable, then clean binaries
-run: $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(EXEC)
+run: build
 	@echo "Build complete. Running $(EXEC)..."
 	./$(EXEC)
 	@echo "Cleaning up binaries..."
 	rm -rf $(OBJDIR) $(EXEC)
 
-# Clean target (optional)
+# Clean target
 clean:
 	rm -rf $(OBJDIR) $(EXEC)
 
-.PHONY: all run clean
+.PHONY: all run clean build

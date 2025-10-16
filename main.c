@@ -19,7 +19,7 @@ int main() {
   Color current = WHITE;
 
   for (int turn = 0; turn < 10; turn++) {
-    BestMove best = miniMaxSearch(board, 3, current == WHITE, current);
+    BestMove best = miniMaxSearch(board, 4, current == WHITE, current);
     printf("Turn %d | %s to move\n", turn + 1,
            current == WHITE ? "White" : "Black");
     printf("Best score: %d\n", best.bestScore);
